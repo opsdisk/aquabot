@@ -105,8 +105,6 @@ def log_timestamp():
            
 if __name__ == "__main__":
 
-    '''Official Edwards level (J-17 Bexar index well) readings are updated on this page between 9:30 a.m. and noon, Monday through Friday.'''
-    
     rootLogger.setLevel(20)  # INFO
     
     # Log file handling
