@@ -25,7 +25,7 @@ class Aquifer():
 
     def run(self):
         while True:
-            if ((900 < self.current_time())  # Is it after 9:30 AM CST?
+            if ((900 < self.current_time())  # Is it after 9:00 AM CST?
                     and (self.todaysDate < self.todays_date())  # Is it the next day?
                     and (not self.sucUpdate)):  # Was an update successful today?
                 
@@ -40,14 +40,12 @@ class Aquifer():
                 self.sucUpdate = True
                 
             else:
-                #print "[*] Sleeping for " + str(self.sleeptime) + " seconds..."
                 rootLogger.info("[*] Sleeping for {0} seconds...".format(self.sleeptime))
                 time.sleep(self.sleeptime)
                 self.sucUpdate = False
     
     def fetch_level(self):
         # Use beautiful soup to grab the levels...works, maybe not the best though
-        #print "[*] Fetching water level..."
         rootLogger.info("[*] Fetching water levels...")
         page = urllib2.urlopen(self.url)
         soup = BeautifulSoup(page.read())
