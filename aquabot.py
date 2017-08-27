@@ -19,7 +19,7 @@ class Aquifer():
     def __init__(self):
         self.sleeptime = 600  # In seconds
         self.url = "http://data.edwardsaquifer.org/j-17.php"
-        self.sucUpdate = False
+        self.successful_update = False
         self.todays_date = datetime.date.today()
         self.parse_twitter_creds()
 
@@ -27,7 +27,7 @@ class Aquifer():
         while True:
             if ((900 < self.current_time())  # Is it after 9:00 AM CST?
                     and (self.todays_date < self.todays_date())  # Is it the next day?
-                    and (not self.sucUpdate)):  # Was an update successful today?
+                    and (not self.successful_update)):  # Was an update successful today?
 
                 today_water_level, yesterday_water_level, ten_day_average = self.fetch_level()
                 message = "The J-17 Bexar aquifer level is " + today_water_level + "'. Yesterday, it was " + yesterday_water_level + "' and the 10-day average is " + ten_day_average + "'"
@@ -37,12 +37,12 @@ class Aquifer():
 
                 # Update variables
                 self.todays_date = self.todays_date()
-                self.sucUpdate = True
+                self.successful_update = True
 
             else:
                 rootLogger.info("[*] Sleeping for {0} seconds...".format(self.sleeptime))
                 time.sleep(self.sleeptime)
-                self.sucUpdate = False
+                self.successful_update = False
 
     def fetch_level(self):
         # Use beautiful soup to grab the levels...works, maybe not the best though
