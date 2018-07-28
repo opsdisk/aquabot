@@ -31,10 +31,9 @@ class Aquifer:
     def run(self):
         while True:
             if (
-                True
-                # (900 < self.current_time())  # Is it after 9:00 AM CST?
-                # and (self.todays_date < self.retrieve_todays_date())  # Is it the next day?
-                # and (not self.successful_update)
+                (900 < self.current_time())  # Is it after 9:00 AM CST?
+                and (self.todays_date < self.retrieve_todays_date())  # Is it the next day?
+                and (not self.successful_update)
             ):  # Was an update successful today?
 
                 today_water_level, yesterday_water_level, ten_day_average = self.fetch_levels()
