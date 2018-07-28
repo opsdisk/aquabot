@@ -26,54 +26,64 @@ if __name__ == "__main__":
 ```  
 
 #### Fetching Water Levels
-The water levels can be found here, [http://data.edwardsaquifer.org/j-17.php](http://data.edwardsaquifer.org/j-17.php), so that page is scraped using BeatifulSoup, a HTML parser. The `fetch_level` function retrieves the relevant information:
+The water levels can be found here, [http://data.edwardsaquifer.org/j-17.php](http://data.edwardsaquifer.org/j-17.php), so that page is scraped using BeatifulSoup, a HTML parser. The `fetch_levels` function retrieves the relevant information:
 
 ```python
-def fetch_level(self):
-        # Use beautiful soup to grab the levels...works, maybe not the best though
-        rootLogger.info("[*] Fetching water levels...")
-        page = urllib2.urlopen(self.url)
-        soup = BeautifulSoup(page.read())
-        table = soup.find_all('table')[1]
-        
-        # Today's Reading
-        column = table.find_all('td')[0]
-        todayWaterLevel = column.find('span').contents[0].strip()
+def fetch_levels(self):
+    rootLogger.info("[*] Fetching water levels...")
 
-        # Yesterday's Reading
-        column = table.find_all('td')[2]
-        yesterdayWaterLevel = column.find('span').contents[0].strip()     
-        
-        # 10 Day Average Reading
-        column = table.find_all('td')[4]
-        tenDayAverage = column.find('span').contents[0].strip()  
+    headers = {"User-Agent": "Edwards Aquifer Bot - Follow on Twitter: @edwardsaquabot"}
 
-        return todayWaterLevel, yesterdayWaterLevel, tenDayAverage
+    response = requests.get(self.url, headers=headers, verify=True, timeout=60)
+    if response.status_code != 200:
+        rootLogger.error(
+            "HTTP status code: {} -- unsuccessfully retrieved: {}".format(response.status_code, self.url)
+        )
+        return
+
+    # Use beautiful soup to grab the levels...works, maybe not the best though.
+    soup = BeautifulSoup(response.text, "html.parser")
+    table = soup.find_all("table")[1]
+
+    # Today's Reading.
+    column = table.find_all("td")[0]
+    today_water_level = column.find("span").contents[0].strip()
+
+    # Yesterday's Reading.
+    column = table.find_all("td")[2]
+    yesterday_water_level = column.find("span").contents[0].strip()
+
+    # 10 Day Average Reading.
+    column = table.find_all("td")[4]
+    ten_day_average = column.find("span").contents[0].strip()
+
+    return today_water_level, yesterday_water_level, ten_day_average
 ```
-The [TwitterAPI](https://github.com/geduldig/twitterapi) Python module loads the account details, authenticates, and posts the results.  The first step is to parse the credentials in the TwitterAPI_creds.ini file using ConfigParser.  Note that the `TwitterAPI_creds.ini` in the code must be populated with your specific API credentials.
+
+The [TwitterAPI](https://github.com/geduldig/twitterapi) Python module loads the account details, authenticates, and posts the results.  The first step is to parse the credentials in the twitter_creds.json file.  Note that the `twitter_creds.json` in the code must be populated with your specific API credentials.
 
 ```python
-    def parse_twitter_creds(self):
-        parser = SafeConfigParser()
-        parser.read('TwitterAPI_creds.ini')
-        self.consumerKey = parser.get('creds', 'consumerKey')
-        self.consumerSecret = parser.get('creds', 'consumerSecret')
-        self.accessToken = parser.get('creds', 'accessToken')
-        self.accessTokenSecret = parser.get('creds', 'accessTokenSecret')
-
+def retrieve_twitter_creds(self):
+    with open("twitter_creds.json", "r") as json_file:
+        self.twitter_creds = json.loads(json_file.read())
 ```
 
 Post the information to Twitter.
 
 ```python
-    def post_tweet(self, message):
-        twitter = TwitterAPI(self.consumerKey, self.consumerSecret, self.accessToken, self.accessTokenSecret)
-        request = twitter.request('statuses/update', {'status': message})
-        statusCode = request.status_code
-        if statusCode == 200:
-            rootLogger.info("Successfully tweeted: {0}".format(message))
-        else:
-            rootLogger.error("HTTP status code: {0} -- unsuccessfully tweeted: {1}".format(statusCode, message))
+def post_tweet(self, message):
+    twitter = TwitterAPI(
+        self.twitter_creds["consumerKey"],
+        self.twitter_creds["consumerSecret"],
+        self.twitter_creds["accessToken"],
+        self.twitter_creds["accessTokenSecret"],
+    )
+    request = twitter.request("statuses/update", {"status": message})
+    status_code = request.status_code
+    if status_code == 200:
+        rootLogger.info("Successfully tweeted: {}".format(message))
+    else:
+        rootLogger.error("HTTP status code: {} -- unsuccessfully tweeted: {}".format(status_code, message))
 ```
 
 #### Conclusion
